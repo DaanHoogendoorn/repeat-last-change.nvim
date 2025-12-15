@@ -1,0 +1,3 @@
+---@class RepeatLastChangeConfig
+---@field keymap string? Keymap to trigger repeat (default: "<leader>n")
+---@field operators string[]? Operators to remap (default: {"c","s","C"})

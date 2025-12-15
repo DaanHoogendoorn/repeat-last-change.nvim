@@ -132,6 +132,7 @@ function M.repeat_next()
 	vim.cmd("normal! .")
 end
 
+---@param opts RepeatLastChangeConfig
 function M.setup(opts)
 	opts = opts or {}
 	local key = opts.keymap or "<leader>n"
