@@ -1,8 +1,10 @@
 local M = {}
 
--- module-local state: state[bufnr] = { pattern = <escaped>, text = <raw>, pending = bool, captured = bool }
+--- Module-local state table mapping buffer numbers to their capture state.
+---@type table<integer, RepeatLastChangeState>
 local state = {}
 
+---@return RepeatLastChangeState
 local function ensure_buf_state(bufnr)
 	state[bufnr] = state[bufnr] or {}
 
@@ -33,6 +35,7 @@ local function do_capture(bufnr, deleted)
 	local s = ensure_buf_state(bufnr)
 	s.pattern = pat
 	s.text = deleted
+	s.replacement = nil
 	s.captured = true
 	s.pending = nil
 	local shown = deleted:gsub("\n", "\\n")
@@ -129,7 +132,15 @@ function M.repeat_next()
 		return
 	end
 
-	vim.cmd("normal! .")
+	if entry.replacement then
+		local text_len = vim.fn.strchars(entry.text)
+		if text_len > 0 then
+			vim.cmd("normal! v" .. (text_len - 1) .. "l")
+			vim.api.nvim_paste(entry.replacement, true, -1)
+		end
+	else
+		vim.cmd("normal! .")
+	end
 end
 
 ---@param opts RepeatLastChangeConfig
@@ -151,6 +162,19 @@ function M.setup(opts)
 	vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "InsertLeave" }, {
 		callback = function()
 			vim.schedule(capture_from_register)
+		end,
+	})
+
+	-- capture replacement text after insert mode
+	vim.api.nvim_create_autocmd("InsertLeave", {
+		callback = function()
+			vim.schedule(function()
+				local bufnr = vim.api.nvim_get_current_buf()
+				local s = state[bufnr]
+				if s and s.captured and not s.replacement then
+					s.replacement = vim.fn.getreg(".")
+				end
+			end)
 		end,
 	})
 

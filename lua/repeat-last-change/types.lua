@@ -1,3 +1,11 @@
 ---@class RepeatLastChangeConfig
 ---@field keymap string? Keymap to trigger repeat (default: "<leader>n")
 ---@field operators string[]? Operators to remap (default: {"c","s","C"})
+
+---@class RepeatLastChangeState
+---@field pattern string? escaped pattern for multi-line search
+---@field text string? raw text to find
+---@field replacement string? text that was typed to replace with
+---@field pending boolean? whether an operator is pending
+---@field captured boolean? whether we've captured the deleted text
+---@field pending_op string? the operator that was invoked
